@@ -38,6 +38,7 @@ class CefWindowX11 : public ui::PlatformEventDispatcher {
   void Hide();
 
   void Focus();
+  void Unfocus();
 
   void SetBounds(const gfx::Rect& bounds);
 

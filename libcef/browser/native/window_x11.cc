@@ -229,6 +229,31 @@ void CefWindowX11::Focus() {
   }
 }
 
+void CefWindowX11::Unfocus() {
+  if (xwindow_ == None || !window_mapped_)
+    return;
+  
+  ::Window focused = None;
+  int revert_to = 0;
+  XGetInputFocus(xdisplay_, &focused, &revert_to);
+  if (!focused)
+    return;
+
+  ::Window toplevel = FindToplevelParent(xdisplay_, xwindow_);
+  if (toplevel == xwindow_)
+    return;
+  
+  ::Window child = None;
+  if (browser_.get()) {
+    child = FindChild(xdisplay_, xwindow_);
+  }
+  if (focused == xwindow_ || focused == child) {
+    // Our window or child window  still has keyboard focus. Return it back to
+    // the toplevel window so that GUI toolkits can receive keyboard events again.
+    XSetInputFocus(xdisplay_, toplevel, RevertToParent, CurrentTime);
+  }
+}
+
 void CefWindowX11::SetBounds(const gfx::Rect& bounds) {
   if (xwindow_ == None)
     return;
