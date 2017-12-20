@@ -39,6 +39,7 @@
 #if defined(CEF_X11)
 typedef union _XEvent XEvent;
 typedef struct _XDisplay XDisplay;
+typedef unsigned long VisualID;
 #endif
 
 #include "include/internal/cef_export.h"
@@ -70,6 +71,17 @@ extern "C" {
 #if defined(CEF_X11)
 CEF_EXPORT XDisplay* cef_get_xdisplay();
 #endif
+
+///
+// Set the system X visual to used by Chromium. It must only be accessed on the browser process UI thread.
+// CEF is likely to crash if the visual of the toplevel window is different from the default Chromium visual.
+///
+CEF_EXPORT void cef_override_system_visual(VisualID visual_id);
+
+///
+// Set the RGBA X visual to used by Chromium. It must only be accessed on the browser process UI thread.
+///
+CEF_EXPORT void cef_override_rgba_visual(VisualID visual_id);
 
 ///
 // Structure representing CefExecuteProcess arguments.
