@@ -1,0 +1,36 @@
+diff --git ui/base/x/x11_util.cc ui/base/x/x11_util.cc
+index dbb8cc534e30..2f79de19b128 100644
+--- ui/base/x/x11_util.cc
++++ ui/base/x/x11_util.cc
+@@ -1403,6 +1403,14 @@ XVisualManager::XVisualManager()
+     DCHECK(visuals_.find(transparent_visual_id_) != visuals_.end());
+ }
+ 
++void XVisualManager::OverrideSystemVisual(VisualID visual_id) {
++  system_visual_id_ = visual_id;
++}
++
++void XVisualManager::OverrideTransparentVisual(VisualID visual_id) {
++  transparent_visual_id_ = visual_id;
++}
++
+ XVisualManager::~XVisualManager() {}
+ 
+ void XVisualManager::ChooseVisualForWindow(bool want_argb_visual,
+diff --git ui/base/x/x11_util_internal.h ui/base/x/x11_util_internal.h
+index 100d215f6a0d..44c430acc168 100644
+--- ui/base/x/x11_util_internal.h
++++ ui/base/x/x11_util_internal.h
+@@ -80,6 +80,12 @@ class UI_BASE_X_EXPORT XVisualManager {
+ 
+   // Are all of the system requirements met for using transparent visuals?
+   bool ArgbVisualAvailable() const;
++
++  // Set a different system visual.
++  void OverrideSystemVisual(VisualID visual_id);
++
++  // Set a different transparent visual.
++  void OverrideTransparentVisual(VisualID visual_id);
+ 
+   ~XVisualManager();
+ 
