@@ -55,16 +55,14 @@ const char kXdndProxy[] = "XdndProxy";
   ::Window* children = NULL;
   unsigned int nchildren = 0;
   // Enumerate all parents of "window" to find the highest level window
-  // that either:
-  //   - has a parent that does not contain the _NET_WM_PID property
-  //   - has a parent that is the root window.
+  // that has a parent that is the root window.
   while (XQueryTree(display, window, &root, &parent, &children, &nchildren)) {
     if (children) {
       XFree(children);
     }
 
     top_level_window = window;
-    if (!ui::PropertyExists(parent, kNetWMPid) || parent == root) {
+    if (parent == root) {
       break;
     }
     window = parent;
