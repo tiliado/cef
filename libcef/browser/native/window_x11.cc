@@ -12,6 +12,7 @@
 #include <X11/extensions/XInput2.h>
 
 #include "ui/base/x/x11_util.h"
+#include "ui/base/x/x11_util_internal.h"
 #include "ui/events/platform/platform_event_source.h"
 #include "ui/views/widget/desktop_aura/desktop_window_tree_host_x11.h"
 #include "ui/views/widget/desktop_aura/x11_topmost_window_finder.h"
@@ -98,6 +99,18 @@ CEF_EXPORT XDisplay* cef_get_xdisplay() {
   if (!CEF_CURRENTLY_ON(CEF_UIT))
     return NULL;
   return gfx::GetXDisplay();
+}
+
+CEF_EXPORT void cef_override_system_visual(VisualID visual_id) {
+  if (!CEF_CURRENTLY_ON(CEF_UIT))
+    return;
+  ui::XVisualManager::GetInstance()->OverrideSystemVisual(visual_id);
+}
+
+CEF_EXPORT void cef_override_rgba_visual(VisualID visual_id) {
+  if (!CEF_CURRENTLY_ON(CEF_UIT))
+    return;
+  ui::XVisualManager::GetInstance()->OverrideTransparentVisual(visual_id);
 }
 
 CefWindowX11::CefWindowX11(CefRefPtr<CefBrowserHostImpl> browser,
