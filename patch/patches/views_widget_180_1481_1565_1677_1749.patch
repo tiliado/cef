@@ -194,7 +194,7 @@ index db66147f0e9c..2b9bdfa2ec53 100644
    // a reference.
    corewm::TooltipWin* tooltip_;
 diff --git ui/views/widget/desktop_aura/desktop_window_tree_host_x11.cc ui/views/widget/desktop_aura/desktop_window_tree_host_x11.cc
-index ebb251545434..14f1320470cd 100644
+index ebb251545434..2cee9dd8a7ab 100644
 --- ui/views/widget/desktop_aura/desktop_window_tree_host_x11.cc
 +++ ui/views/widget/desktop_aura/desktop_window_tree_host_x11.cc
 @@ -152,6 +152,7 @@ DesktopWindowTreeHostX11::DesktopWindowTreeHostX11(
@@ -222,7 +222,18 @@ index ebb251545434..14f1320470cd 100644
    return bounds_in_pixels_;
  }
  
-@@ -511,7 +515,8 @@ void DesktopWindowTreeHostX11::CloseNow() {
+@@ -267,7 +271,9 @@ void DesktopWindowTreeHostX11::OnCrossingEvent(bool enter,
+     // window or the PointerRoot is focused) && |has_pointer_|.  Therefore, we
+     // can just use |has_pointer_| in the assignment.  The transitions for when
+     // the focus changes are handled in OnFocusEvent().
+-    has_pointer_focus_ = has_pointer_;
++    // On the other hand, if has_external_parent_ is true, we don't want to steal
++    // focus from the toolkits when mouse enters web view. It must click.
++    has_pointer_focus_ = has_pointer_ && !has_external_parent_;
+   }
+ 
+   AfterActivationStateChanged();
+@@ -511,7 +517,8 @@ void DesktopWindowTreeHostX11::CloseNow() {
    // Actually free our native resources.
    if (ui::PlatformEventSource::GetInstance())
      ui::PlatformEventSource::GetInstance()->RemovePlatformEventDispatcher(this);
@@ -232,7 +243,7 @@ index ebb251545434..14f1320470cd 100644
    xwindow_ = None;
  
    desktop_native_widget_aura_->OnHostClosed();
-@@ -652,6 +657,8 @@ void DesktopWindowTreeHostX11::GetWindowPlacement(
+@@ -652,6 +659,8 @@ void DesktopWindowTreeHostX11::GetWindowPlacement(
  }
  
  gfx::Rect DesktopWindowTreeHostX11::GetWindowBoundsInScreen() const {
@@ -241,7 +252,16 @@ index ebb251545434..14f1320470cd 100644
    return ToDIPRect(bounds_in_pixels_);
  }
  
-@@ -1247,6 +1254,8 @@ void DesktopWindowTreeHostX11::SetBoundsInPixels(
+@@ -728,7 +737,7 @@ void DesktopWindowTreeHostX11::SetShape(
+ }
+ 
+ void DesktopWindowTreeHostX11::Activate() {
+-  if (!IsVisible() || !activatable_)
++  if (!IsVisible() || !activatable_ || has_external_parent_)
+     return;
+ 
+   BeforeActivationStateChanged();
+@@ -1247,6 +1256,8 @@ void DesktopWindowTreeHostX11::SetBoundsInPixels(
  }
  
  gfx::Point DesktopWindowTreeHostX11::GetLocationOnScreenInPixels() const {
@@ -250,7 +270,7 @@ index ebb251545434..14f1320470cd 100644
    return bounds_in_pixels_.origin();
  }
  
-@@ -1339,7 +1348,6 @@ void DesktopWindowTreeHostX11::InitX11Window(
+@@ -1339,7 +1350,6 @@ void DesktopWindowTreeHostX11::InitX11Window(
    ::Atom window_type;
    switch (params.type) {
      case Widget::InitParams::TYPE_MENU:
@@ -258,7 +278,7 @@ index ebb251545434..14f1320470cd 100644
        window_type = gfx::GetAtom("_NET_WM_WINDOW_TYPE_MENU");
        break;
      case Widget::InitParams::TYPE_TOOLTIP:
-@@ -1395,9 +1403,15 @@ void DesktopWindowTreeHostX11::InitX11Window(
+@@ -1395,9 +1405,15 @@ void DesktopWindowTreeHostX11::InitX11Window(
    attribute_mask |= CWBorderPixel;
    swa.border_pixel = 0;
  
@@ -275,7 +295,7 @@ index ebb251545434..14f1320470cd 100644
                             bounds_in_pixels_.y(), bounds_in_pixels_.width(),
                             bounds_in_pixels_.height(),
                             0,  // border width
-@@ -2012,6 +2026,10 @@ uint32_t DesktopWindowTreeHostX11::DispatchEvent(
+@@ -2012,6 +2028,10 @@ uint32_t DesktopWindowTreeHostX11::DispatchEvent(
        }
        break;
      }
