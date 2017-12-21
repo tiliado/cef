@@ -62,6 +62,7 @@ class CefWindowX11 : public ui::PlatformEventDispatcher {
   ::Display* xdisplay_;
   ::Window parent_xwindow_;
   ::Window xwindow_;
+  ::Window previously_focused_;
 
   // Is the window mapped to the screen?
   bool window_mapped_;
