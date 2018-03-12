@@ -135,8 +135,11 @@ views::Widget* CefBrowserPlatformDelegateNativeLinux::GetWindowWidget() const {
 }
 
 void CefBrowserPlatformDelegateNativeLinux::SendFocusEvent(bool setFocus) {
-  if (!setFocus)
+  if (!setFocus) {
+    if (window_x11_)
+      window_x11_->Unfocus();
     return;
+  }
 
   if (browser_->web_contents()) {
     // Give logical focus to the RenderWidgetHostViewAura in the views

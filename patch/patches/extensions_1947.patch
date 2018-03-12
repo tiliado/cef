@@ -1,5 +1,5 @@
 diff --git content/browser/frame_host/render_frame_host_manager.cc content/browser/frame_host/render_frame_host_manager.cc
-index 1971727c0a8f..2babb3aca3d0 100644
+index 1971727c0a8f..4306530c069e 100644
 --- content/browser/frame_host/render_frame_host_manager.cc
 +++ content/browser/frame_host/render_frame_host_manager.cc
 @@ -1111,10 +1111,11 @@ bool RenderFrameHostManager::ShouldSwapBrowsingInstancesForNavigation(
