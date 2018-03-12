@@ -54,21 +54,40 @@ const char kXdndProxy[] = "XdndProxy";
   ::Window* children = NULL;
   unsigned int nchildren = 0;
   // Enumerate all parents of "window" to find the highest level window
-  // that either:
-  //   - has a parent that does not contain the _NET_WM_PID property
-  //   - has a parent that is the root window.
+  // that has a parent that is the root window.
   while (XQueryTree(display, window, &root, &parent, &children, &nchildren)) {
     if (children) {
       XFree(children);
     }
 
     top_level_window = window;
-    if (!ui::PropertyExists(parent, kNetWMPid) || parent == root) {
+    if (parent == root) {
       break;
     }
     window = parent;
   }
   return top_level_window;
+}
+
+bool IsParentOfChildWindow(::Display* display, ::Window parent, ::Window child) {
+  if (parent == child)
+    return false;
+  ::Window root = x11::None;
+  ::Window real_parent = x11::None;
+  ::Window* children = NULL;
+  unsigned int nchildren = 0;
+  while (XQueryTree(display, child, &root, &real_parent, &children, &nchildren)) {
+    if (children) {
+      XFree(children);
+    }
+    if (real_parent == root) {
+      return real_parent == parent;
+    }
+    if (real_parent == parent)
+        return true;
+    child = real_parent;
+  }
+  return false;
 }
 
 }  // namespace
@@ -86,6 +105,7 @@ CefWindowX11::CefWindowX11(CefRefPtr<CefBrowserHostImpl> browser,
       xdisplay_(gfx::GetXDisplay()),
       parent_xwindow_(parent_xwindow),
       xwindow_(0),
+      previously_focused_(0),
       window_mapped_(false),
       bounds_(bounds),
       focus_pending_(false),
@@ -215,14 +235,55 @@ void CefWindowX11::Focus() {
   if (xwindow_ == x11::None || !window_mapped_)
     return;
 
+  ::Window focused = x11::None;
+  int revert_to = 0;
+  XGetInputFocus(xdisplay_, &focused, &revert_to);
+  
   if (browser_.get()) {
     ::Window child = FindChild(xdisplay_, xwindow_);
-    if (child && ui::IsWindowVisible(child)) {
+    if (child && focused != child && ui::IsWindowVisible(child)) {
       // Give focus to the child DesktopWindowTreeHostX11.
       XSetInputFocus(xdisplay_, child, RevertToParent, x11::CurrentTime);
+      if (focused != xwindow_) {
+          // Store the focused window to restore the original state precisely.
+          previously_focused_ = focused;  
+      }
     }
-  } else {
+  } else if (focused != xwindow_) {
     XSetInputFocus(xdisplay_, xwindow_, RevertToParent, x11::CurrentTime);
+    // Store the focused window to restore the original state precisely.
+    previously_focused_ = focused;
+  }
+}
+
+void CefWindowX11::Unfocus() {
+  if (xwindow_ == x11::None || !window_mapped_)
+    return;
+  
+  ::Window focused = x11::None;
+  int revert_to = 0;
+  XGetInputFocus(xdisplay_, &focused, &revert_to);
+  if (!focused)
+    return;
+
+  ::Window toplevel = FindToplevelParent(xdisplay_, xwindow_);
+  if (toplevel == xwindow_)
+    return;
+  
+  ::Window child = x11::None;
+  if (browser_.get()) {
+    child = FindChild(xdisplay_, xwindow_);
+  }
+  if (focused == xwindow_ || focused == child) {
+    // Our window or child window  still has keyboard focus. Return it back to
+    // the original window so that GUI toolkits can receive keyboard events again.
+    if (previously_focused_ && IsParentOfChildWindow(xdisplay_, toplevel, previously_focused_)) {
+      // GTK+ may have a special "focus window" for keyboard events. It must be a child of the toplevel though.
+      XSetInputFocus(xdisplay_, previously_focused_, RevertToParent, x11::CurrentTime);
+    } else {
+      // Otherwise, the tolevel window is the best focus candidate we have.
+      XSetInputFocus(xdisplay_, toplevel, RevertToParent, x11::CurrentTime);
+    }
   }
 }
 

@@ -38,6 +38,7 @@ class CefWindowX11 : public ui::PlatformEventDispatcher {
   void Hide();
 
   void Focus();
+  void Unfocus();
 
   void SetBounds(const gfx::Rect& bounds);
 
@@ -63,6 +64,7 @@ class CefWindowX11 : public ui::PlatformEventDispatcher {
   ::Display* xdisplay_;
   ::Window parent_xwindow_;
   ::Window xwindow_;
+  ::Window previously_focused_;
 
   // Is the window mapped to the screen?
   bool window_mapped_;
