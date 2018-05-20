@@ -1,0 +1,20 @@
+diff --git sandbox/linux/services/libc_interceptor.cc sandbox/linux/services/libc_interceptor.cc
+index 50c8f96c06d1..989189a2d0e7 100644
+--- sandbox/linux/services/libc_interceptor.cc
++++ sandbox/linux/services/libc_interceptor.cc
+@@ -205,10 +205,13 @@ static void InitLibcLocaltimeFunctions() {
+     // Nvidia's libGL.so overrides dlsym for an unknown reason and replaces
+     // it with a version which doesn't work. In this case we'll get a NULL
+     // result. There's not a lot we can do at this point, so we just bodge it!
+-    LOG(ERROR) << "Your system is broken: dlsym doesn't work! This has been "
++    // Don't use LOG(ERROR) here as InitLibcLocaltimeFunctions is then called
++    // again causing a pthread_once deadlock.
++    fputs (       "Your system is broken: dlsym doesn't work! This has been "
+                   "reported to be caused by Nvidia's libGL. You should expect"
+                   " time related functions to misbehave. "
+-                  "https://bugs.chromium.org/p/chromium/issues/detail?id=16800";
++                  "https://bugs.chromium.org/p/chromium/issues/detail?id=16800"
++                  "\n", stderr);
+   }
+ 
+   if (!g_libc_funcs->localtime)
